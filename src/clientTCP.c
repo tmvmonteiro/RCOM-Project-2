@@ -51,11 +51,11 @@ int configure_socket(char *ip, uint16_t port, int *sockfd){
     return 0;
 }
 
-int term_B2(){
+int term_B2(char **content){
     bytes = read(sockfd2, response, BUF_SIZE - 1);
     if (bytes <= 0) return 1;
     response[bytes] = '\0';
-    printf("%s", response);
+    *content = response;
 
     close(sockfd1);
     close(sockfd2);

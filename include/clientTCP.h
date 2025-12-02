@@ -5,7 +5,7 @@
 #include "parser.h"
 
 int configure_socket(char *ip, uint16_t port,int *sockfd);
-int term_B2();
+int term_B2(char **content);
 int term_A2(struct URL url);
 int term_B1();
 int term_A1(struct URL url);

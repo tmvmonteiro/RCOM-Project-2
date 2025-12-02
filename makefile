@@ -12,7 +12,7 @@ DOWNLOAD_DIR = download
 TARGET = $(BIN_DIR)/download
 
 # Source files - ADD parser.c HERE
-SRC = $(SRC_DIR)/download.c $(SRC_DIR)/parser.c $(SRC_DIR)/getip.c $(SRC_DIR)/clientTCP.c
+SRC = $(SRC_DIR)/download.c $(SRC_DIR)/parser.c $(SRC_DIR)/getip.c $(SRC_DIR)/clientTCP.c $(SRC_DIR)/create_file.c
 
 # Default target
 all: $(TARGET)

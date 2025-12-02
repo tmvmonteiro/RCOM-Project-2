@@ -5,6 +5,7 @@
 #include "parser.h"
 #include "getip.h"
 #include "clientTCP.h"
+#include "create_file.h"
 
 int main(int argc, char *argv[]){
 
@@ -51,11 +52,17 @@ int main(int argc, char *argv[]){
     }
 
     // Step 6
+    char *content;
+    if (term_B2(&content)){
+        return 1;
+    } 
 
-    if (term_B2()){
+    // Step 7 
+
+    if (create_file(url, content)){
         return 1;
     }
-   
+
     free_url(&url);
 
     return 0;
