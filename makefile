@@ -11,16 +11,16 @@ DOWNLOAD_DIR = download
 # Targets
 TARGET = $(BIN_DIR)/download
 
-# Source files
-SRC = $(SRC_DIR)/download.c
+# Source files - ADD parser.c HERE
+SRC = $(SRC_DIR)/download.c $(SRC_DIR)/parser.c $(SRC_DIR)/getip.c
 
 # Default target
 all: $(TARGET)
 
-# Compile the download program
+# Compile the download program - UPDATED to use all source files
 $(TARGET): $(SRC)
 	@mkdir -p $(BIN_DIR) $(DOWNLOAD_DIR)
-	$(CC) $(CFLAGS) $(INCLUDES) $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@
 
 # Clean bin and download directories
 clean:
