@@ -12,80 +12,114 @@
 
 #include "parser.h"
 
-#define SERVER_PORT 21
-#define SERVER_ADDR "193.137.29.15"
+#define CONTROLLER_PORT 21
 #define BUF_SIZE 100000
 
-int sockfd;
+int sockfd1, sockfd2;
 struct sockaddr_in server_addr;
+int ip1, ip2, ip3, ip4, port1, port2;
+ssize_t bytes;
+char response[BUF_SIZE];
+int code;
 
-int configure_socket(struct URL url){
+int configure_socket(char *ip, uint16_t port, int *sockfd){
     /*server address handling*/
     bzero((char *) &server_addr, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = inet_addr(url.ip);    /*32 bit Internet address network byte ordered*/
-    server_addr.sin_port = htons(SERVER_PORT);        /*server TCP port must be network byte ordered */
+    server_addr.sin_addr.s_addr = inet_addr(ip);    /*32 bit Internet address network byte ordered*/
+    server_addr.sin_port = htons(port);        /*server TCP port must be network byte ordered */
     
     /*open a TCP socket*/
-    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    if ((*sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         perror("socket()");
         return 1;
     }
     
     /*connect to the server*/
-    if (connect(sockfd,
+    if (connect(*sockfd,
                 (struct sockaddr *) &server_addr,
                 sizeof(server_addr)) < 0) {
         perror("connect()");
         return 1;
     }
 
-    char read_buf[BUF_SIZE];
-    read(sockfd, &read_buf, BUF_SIZE);
-    printf("%s",read_buf);
+    if (port == CONTROLLER_PORT){
+        char read_buf[BUF_SIZE];
+        bytes = read(*sockfd, &read_buf, BUF_SIZE);
+    }
     
     return 0;
 }
 
-/*int term_B2(struct URL url){
-    // To Implement
+int term_B2(){
+    bytes = read(sockfd2, response, BUF_SIZE - 1);
+    if (bytes <= 0) return 1;
+    response[bytes] = '\0';
+    printf("%s", response);
 
+    close(sockfd1);
+    close(sockfd2);
     return 0;
 }
 
 int term_A2(struct URL url){
-    // To Implement
+    char *buf = NULL;
+    bytes = asprintf(&buf, "RETR %s\r\n", url.path);
 
+    // Send RETR command
+    bytes = write(sockfd1, buf, strlen(buf));
+
+    // Read and check RETR response
+    bytes = read(sockfd1, response, BUF_SIZE - 1);
+    if (bytes <= 0) return 1;
+    response[bytes] = '\0';
+    
+    
+    sscanf(response, "%d", &code);
+    if (code != 150 && code != 125) {
+        fprintf(stderr, "RETR command failed (expected 150 or 125, got %d)\n", code);
+        free(buf);
+        return 1;
+    }
+
+    // Cleanup
+    free(buf);
+    close(sockfd1);
     return 0;
 }
 
-int term_B1(struct URL url){
-    // To Implement
+int term_B1(){
+    uint16_t data_port = (256 * port1) + port2;
+    char *ip = NULL;
+    bytes = asprintf(&ip, "%d.%d.%d.%d", ip1, ip2, ip3, ip4);
 
+    if (configure_socket(ip, data_port, &sockfd2)) {
+        return 1;
+    }
+
+    // Cleanup
+    free(ip);
     return 0;
-}*/
+}
 
 int term_A1(struct URL url) {
-    if (configure_socket(url)) {
+    if (configure_socket(url.ip, CONTROLLER_PORT, &sockfd1)) {
         return 1;
     }
 
     char *buf1 = NULL, *buf2 = NULL;
-    asprintf(&buf1, "USER %s\r\n", url.user);
-    asprintf(&buf2, "PASS %s\r\n", url.password);
+    bytes = asprintf(&buf1, "USER %s\r\n", url.user);
+    bytes = asprintf(&buf2, "PASS %s\r\n", url.password);
     char buf3[] = "PASV\r\n";
-    char response[BUF_SIZE];
-    ssize_t bytes;
-    int code;
 
     // Send USER command
-    write(sockfd, buf1, strlen(buf1));
+    bytes = write(sockfd1, buf1, strlen(buf1));
     
     // Read and check USER response
-    bytes = read(sockfd, response, BUF_SIZE - 1);
+    bytes = read(sockfd1, response, BUF_SIZE - 1);
     if (bytes <= 0) return 1;
     response[bytes] = '\0';
-    printf("%s", response);
+    
     
     sscanf(response, "%d", &code);
     if (code != 331) {
@@ -96,13 +130,13 @@ int term_A1(struct URL url) {
     }
 
     // Send PASS command
-    write(sockfd, buf2, strlen(buf2));
+    bytes = write(sockfd1, buf2, strlen(buf2));
     
     // Read and check PASS response
-    bytes = read(sockfd, response, BUF_SIZE - 1);
+    bytes = read(sockfd1, response, BUF_SIZE - 1);
     if (bytes <= 0) return 1;
     response[bytes] = '\0';
-    printf("%s", response);
+    
     
     sscanf(response, "%d", &code);
     if (code != 230) {
@@ -113,13 +147,13 @@ int term_A1(struct URL url) {
     }
 
     // Send PASV command
-    write(sockfd, buf3, strlen(buf3));
+    bytes = write(sockfd1, buf3, strlen(buf3));
     
     // Read and check PASV response
-    bytes = read(sockfd, response, BUF_SIZE - 1);
+    bytes = read(sockfd1, response, BUF_SIZE - 1);
     if (bytes <= 0) return 1;
     response[bytes] = '\0';
-    printf("%s", response);
+    
     
     sscanf(response, "%d", &code);
     if (code != 227) {
@@ -130,7 +164,6 @@ int term_A1(struct URL url) {
     }
 
     // Parse PASV response
-    int ip1, ip2, ip3, ip4, port1, port2;
     if (sscanf(response, "227 Entering Passive Mode (%d,%d,%d,%d,%d,%d)",
                &ip1, &ip2, &ip3, &ip4, &port1, &port2) == 6) {
         printf("Data connection: %d.%d.%d.%d:%d\n", 
@@ -140,7 +173,6 @@ int term_A1(struct URL url) {
     // Cleanup
     free(buf1);
     free(buf2);
-    close(sockfd);
     
     return 0;
 }

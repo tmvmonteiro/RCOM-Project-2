@@ -40,7 +40,21 @@ int main(int argc, char *argv[]){
     
     // Step 4
 
+    if (term_B1()){
+        return 1;
+    }
+
     // Step 5
+
+    if (term_A2(url)){
+        return 1;
+    }
+
+    // Step 6
+
+    if (term_B2()){
+        return 1;
+    }
    
     free_url(&url);
 
