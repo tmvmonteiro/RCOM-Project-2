@@ -4,6 +4,7 @@
 
 #include "parser.h"
 #include "getip.h"
+#include "clientTCP.h"
 
 int main(int argc, char *argv[]){
 
@@ -12,7 +13,6 @@ int main(int argc, char *argv[]){
     }
 
     struct URL url;
-    char *ip = NULL;
 
     // Step 1 
 
@@ -29,10 +29,14 @@ int main(int argc, char *argv[]){
 
     // Step 2 
 
-    getip(&ip, url.host);
-    printf("IP Address : %s\n", ip);
+    getip(&url);
+    printf("IP Address : %s\n", url.ip);
 
     // Step 3
+
+    if (term_A1(url)){
+        return 1;
+    }
     
     // Step 4
 

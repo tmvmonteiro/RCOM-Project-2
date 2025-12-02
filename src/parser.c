@@ -9,6 +9,7 @@ int parse(struct URL *url, char *input) {
     url->password = NULL;
     url->host = NULL;
     url->path = NULL;
+    url->ip = NULL;
     
     // Check for empty input
     if (input == NULL || strlen(input) == 0) {
@@ -180,4 +181,5 @@ void free_url(struct URL *url) {
     if (url->password) free(url->password);
     if (url->host) free(url->host);
     if (url->path) free(url->path);
+    if (url->ip) free(url->ip);
 }

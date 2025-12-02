@@ -8,6 +8,7 @@ struct URL
     char *password;
     char *host;
     char *path;
+    char *ip;
 };
 
 int parse(struct URL *url, char *input);

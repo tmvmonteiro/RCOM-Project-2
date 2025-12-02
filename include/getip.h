@@ -1,6 +1,8 @@
 #ifndef GETIP_H
 #define GETIP_H
 
-int getip(char **ip, char *host);
+#include "parser.h"
+
+int getip(struct URL *url);
 
 #endif /* GETIP_H */
