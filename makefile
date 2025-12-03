@@ -32,7 +32,7 @@ clean:
 	fi
 
 example1: $(TARGET)
-	@./$(TARGET) "ftp://ftp.up.pt/pub/gnu/emacs/elisp-manual-21-2.8.tar.gz"
+	@./$(TARGET) "ftp://ftp.up.pt/debian/README.html"
 
 example2: $(TARGET)
 	@./$(TARGET) "ftp://demo:password@test.rebex.net/readme.txt"
@@ -51,4 +51,4 @@ help:
 	@echo "  help    : Show this help message"
 
 # Phony targets (not actual files)
-.PHONY: all clean run example1 example2 example3 help
+.PHONY: all clean run example2 example3 help

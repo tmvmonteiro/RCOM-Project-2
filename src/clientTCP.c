@@ -50,7 +50,7 @@ int read_ftp_response(int sockfd, int *code) {
         int len = read_line(sockfd, line, sizeof(line));
         if (len <= 0) return 1;  //can't read
 
-        //printf("%s", line); for debugging
+        printf("%s", line); //for debugging
 
         // validate that the line starts with a code
         if (isdigit(line[0]) && isdigit(line[1]) && isdigit(line[2])) {
@@ -129,10 +129,8 @@ int term_A2(struct URL url){
     bytes = write(sockfd1, buf, strlen(buf));
 
     // Read and check RETR response
-    bytes = read(sockfd1, line, BUF_SIZE - 1);
+    read_ftp_response(sockfd1, &code);
     if (bytes <= 0) return 1;
-    line[bytes] = '\0';
-    
     
     sscanf(line, "%d", &code);
     if (code != 150 && code != 125) {
