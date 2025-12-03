@@ -31,16 +31,24 @@ clean:
 		rm -rf $(DOWNLOAD_DIR)/*; \
 	fi
 
-example: $(TARGET)
+example1: $(TARGET)
+	@./$(TARGET) "ftp://ftp.up.pt/pub/gnu/emacs/elisp-manual-21-2.8.tar.gz"
+
+example2: $(TARGET)
 	@./$(TARGET) "ftp://demo:password@test.rebex.net/readme.txt"
+
+example3: $(TARGET)
+	@./$(TARGET) "ftp://anonymous:anonymous@ftp.bit.nl/speedtest/100mb.bin"
 
 # Show help
 help:
 	@echo "Available targets:"
 	@echo "  all     : Compile the download program (default)"
 	@echo "  clean   : Remove all files from bin and download directories"
-	@echo "  example : Compile and run the program with an example"
+	@echo "  example1 : Compile and run the program with an example: ftp://ftp.up.pt/pub/gnu/emacs/elisp-manual-21-2.8.tar.gz
+	@echo "  example2 : Compile and run the program with an example: ftp://demo:password@test.rebex.net/readme.txt"
+	@echo "  example3 : Compile and run the program with an example: ftp://anonymous:anonymous@ftp.bit.nl/speedtest/100mb.bin
 	@echo "  help    : Show this help message"
 
 # Phony targets (not actual files)
-.PHONY: all clean run example help
+.PHONY: all clean run example1 example2 example3 help

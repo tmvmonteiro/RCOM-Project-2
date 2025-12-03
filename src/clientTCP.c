@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "parser.h"
 
@@ -19,8 +20,66 @@ int sockfd1, sockfd2;
 struct sockaddr_in server_addr;
 int ip1, ip2, ip3, ip4, port1, port2;
 ssize_t bytes;
-char response[BUF_SIZE];
+char line[BUF_SIZE];
 int code;
+
+int read_line(int sockfd, char *buf, size_t maxlen) {
+    size_t pos = 0;
+    while (pos < maxlen - 1) {
+        char c;
+        ssize_t r = read(sockfd, &c, 1);
+        if (r <= 0) return -1;  // closed socket
+
+        buf[pos++] = c;
+
+        // line ends with CRLF
+        if (pos >= 2 && buf[pos-2] == '\r' && buf[pos-1] == '\n') {
+            buf[pos] = '\0';
+            return pos;
+        }
+    }
+    buf[maxlen - 1] = '\0';
+    return pos;
+}
+
+int read_ftp_response(int sockfd, int *code) {
+    int parsed_code = -1;
+    int is_multiline = 0;
+
+    while (1) {
+        int len = read_line(sockfd, line, sizeof(line));
+        if (len <= 0) return 1;  //can't read
+
+        //printf("%s", line); for debugging
+
+        // validate that the line starts with a code
+        if (isdigit(line[0]) && isdigit(line[1]) && isdigit(line[2])) {
+            int c = (line[0] - '0') * 100 + (line[1] - '0') * 10 + (line[2] - '0');
+            
+            if (parsed_code == -1) {
+                parsed_code = c;  // save the code from the first line
+                *code = parsed_code;
+
+                // check for XYZ- format
+                if (line[3] == '-') {
+                    is_multiline = 1;  // multi-line response
+                }
+            }
+
+            // if multiline, only ends when finding "XYZ "
+            if (is_multiline) {
+                if (line[3] == ' ') {
+                    return 0;
+                }
+            } else {
+                // single-line: ends immediately
+                return 0;
+            }
+        }
+    }
+
+    return 0;
+}
 
 int configure_socket(char *ip, uint16_t port, int *sockfd){
     /*server address handling*/
@@ -52,10 +111,10 @@ int configure_socket(char *ip, uint16_t port, int *sockfd){
 }
 
 int term_B2(char **content){
-    bytes = read(sockfd2, response, BUF_SIZE - 1);
+    bytes = read(sockfd2, line, BUF_SIZE - 1);
     if (bytes <= 0) return 1;
-    response[bytes] = '\0';
-    *content = response;
+    line[bytes] = '\0';
+    *content = line;
 
     close(sockfd1);
     close(sockfd2);
@@ -70,12 +129,12 @@ int term_A2(struct URL url){
     bytes = write(sockfd1, buf, strlen(buf));
 
     // Read and check RETR response
-    bytes = read(sockfd1, response, BUF_SIZE - 1);
+    bytes = read(sockfd1, line, BUF_SIZE - 1);
     if (bytes <= 0) return 1;
-    response[bytes] = '\0';
+    line[bytes] = '\0';
     
     
-    sscanf(response, "%d", &code);
+    sscanf(line, "%d", &code);
     if (code != 150 && code != 125) {
         fprintf(stderr, "RETR command failed (expected 150 or 125, got %d)\n", code);
         free(buf);
@@ -116,12 +175,9 @@ int term_A1(struct URL url) {
     bytes = write(sockfd1, buf1, strlen(buf1));
     
     // Read and check USER response
-    bytes = read(sockfd1, response, BUF_SIZE - 1);
+    read_ftp_response(sockfd1, &code);
     if (bytes <= 0) return 1;
-    response[bytes] = '\0';
     
-    
-    sscanf(response, "%d", &code);
     if (code != 331) {
         fprintf(stderr, "USER command failed (expected 331, got %d)\n", code);
         free(buf1);
@@ -133,12 +189,9 @@ int term_A1(struct URL url) {
     bytes = write(sockfd1, buf2, strlen(buf2));
     
     // Read and check PASS response
-    bytes = read(sockfd1, response, BUF_SIZE - 1);
+    read_ftp_response(sockfd1, &code);
     if (bytes <= 0) return 1;
-    response[bytes] = '\0';
     
-    
-    sscanf(response, "%d", &code);
     if (code != 230) {
         fprintf(stderr, "Login failed (expected 230, got %d)\n", code);
         free(buf1);
@@ -150,12 +203,9 @@ int term_A1(struct URL url) {
     bytes = write(sockfd1, buf3, strlen(buf3));
     
     // Read and check PASV response
-    bytes = read(sockfd1, response, BUF_SIZE - 1);
+    read_ftp_response(sockfd1, &code);
     if (bytes <= 0) return 1;
-    response[bytes] = '\0';
     
-    
-    sscanf(response, "%d", &code);
     if (code != 227) {
         fprintf(stderr, "PASV command failed (expected 227, got %d)\n", code);
         free(buf1);
@@ -164,7 +214,7 @@ int term_A1(struct URL url) {
     }
 
     // Parse PASV response
-    if (sscanf(response, "227 Entering Passive Mode (%d,%d,%d,%d,%d,%d)",
+    if (sscanf(line, "227 Entering Passive Mode (%d,%d,%d,%d,%d,%d)",
                &ip1, &ip2, &ip3, &ip4, &port1, &port2) == 6) {
         printf("Data connection: %d.%d.%d.%d:%d\n", 
                ip1, ip2, ip3, ip4, port1 * 256 + port2);
