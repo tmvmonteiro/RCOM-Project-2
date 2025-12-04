@@ -80,7 +80,8 @@ int configure_socket(char *ip, uint16_t port, int *sockfd, FILE **sock_file){
     if (port == CONTROLLER_PORT){
         char read_buf[BUF_SIZE];
         bytes = read(*sockfd, &read_buf, BUF_SIZE);
-    }
+        printf("\nControl socket configured with success!\n");
+    } else printf("\nData socket configured with success!\n");
     
     return 0;
 }
@@ -103,6 +104,11 @@ int term_B2(char **content) {
             (*content)[total] = '\0';
         }
     }
+
+    fclose(sock_file1);
+    fclose(sock_file2);
+    close(sockfd1);
+    close(sockfd2);
     
     return 0;
 }
@@ -116,16 +122,14 @@ int term_A2(struct URL url){
     if (bytes <= 0) return 1;
 
     // Read and check RETR response
-    if(read_ftp_response(sock_file1, &code)){
-        // Insert error print here
-        return 1;
-    }
+    read_ftp_response(sock_file1, &code);
     
     if (code != 150 && code != 125) {
         fprintf(stderr, "RETR command failed (expected 150 or 125, got %d)\n", code);
         free(buf);
         return 1;
     }
+    printf("\nSent Retrieve request successfully!\n");
 
     // Cleanup
     free(buf);
@@ -162,10 +166,7 @@ int term_A1(struct URL url) {
     if (bytes <= 0) return 1;
     
     // Read and check USER response
-    if(read_ftp_response(sock_file1, &code)){
-        // Insert error print here
-        return 1;
-    }
+    read_ftp_response(sock_file1, &code);
     
     if (code != 331) {
         fprintf(stderr, "USER command failed (expected 331, got %d)\n", code);
@@ -179,10 +180,7 @@ int term_A1(struct URL url) {
     if (bytes <= 0) return 1;
 
     // Read and check PASS response
-    if(read_ftp_response(sock_file1, &code)){
-        // Insert error print here
-        return 1;
-    }
+    read_ftp_response(sock_file1, &code);
     
     if (code != 230) {
         fprintf(stderr, "Login failed (expected 230, got %d)\n", code);
@@ -190,16 +188,14 @@ int term_A1(struct URL url) {
         free(buf2);
         return 1;
     }
+    printf("Login successful!\n");
 
     // Send PASV command
     bytes = write(sockfd1, buf3, strlen(buf3));
     if (bytes <= 0) return 1;
     
     // Read and check PASV response
-    if(read_ftp_response(sock_file1, &code)){
-        // Insert error print here
-        return 1;
-    }
+    read_ftp_response(sock_file1, &code);
     
     if (code != 227) {
         fprintf(stderr, "PASV command failed (expected 227, got %d)\n", code);
@@ -209,6 +205,7 @@ int term_A1(struct URL url) {
     }
 
     // Parse PASV response
+    printf("Entered Passive mode with success!\n");
     if (sscanf(line, "227 Entering Passive Mode (%d,%d,%d,%d,%d,%d)",
                &ip1, &ip2, &ip3, &ip4, &port1, &port2) == 6) {
         printf("Data connection: %d.%d.%d.%d:%d\n", 

@@ -46,6 +46,7 @@ int create_file(struct URL url, char *content) {
         fprintf(stderr, "Error: Failed to close file '%s'\n", filepath);
         return 1;
     }
+    printf("\nFile %s created with success!\n", filename);
 
     return 0;
 }
