@@ -32,13 +32,37 @@ clean:
 	fi
 
 example1: $(TARGET)
-	@./$(TARGET) "ftp://ftp.up.pt/debian/README.html"
+	@./$(TARGET) "ftp://ftp.up.pt/pub/archlinux/archive/iso/arch-0.8-base-i686.iso"
 
 example2: $(TARGET)
 	@./$(TARGET) "ftp://demo:password@test.rebex.net/readme.txt"
 
 example3: $(TARGET)
 	@./$(TARGET) "ftp://anonymous:anonymous@ftp.bit.nl/speedtest/100mb.bin"
+
+error1: $(TARGET)
+	@./$(TARGET) "ftp://anonymous@ftp.bit.nl/speedtest/100mb.bin"
+
+error2: $(TARGET)
+	@./$(TARGET) "ftp://anonymousanonymous@ftp.bit.nl/speedtest/100mb.bin"
+
+error3: $(TARGET)
+	@./$(TARGET) "ftp://anonymous:anonymousftp.bit.nl/speedtest/100mb.bin"
+
+error4: $(TARGET)
+	@./$(TARGET) "ftp//anonymous:anonymous@ftp.bit.nl/speedtest/100mb.bin"
+
+error5: $(TARGET)
+	@./$(TARGET) "ftp:\\anonymous:anonymous@ftp.bit.nl/speedtest/100mb.bin"
+
+error7: $(TARGET)
+	@./$(TARGET) "ftp://anonymous:anonymous@/speedtest/100mb.bin"
+
+error8: $(TARGET)
+	@./$(TARGET) "ftp:///speedtest/100mb.bin"
+
+error9: $(TARGET)
+	@./$(TARGET) "ftp://anonymous:anonymous@ftp.bit.nl:21/speedtest/100mb.bin"
 
 # Show help
 help:
@@ -49,6 +73,3 @@ help:
 	@echo "  example2 : Compile and run the program with an example: ftp://demo:password@test.rebex.net/readme.txt"
 	@echo "  example3 : Compile and run the program with an example: ftp://anonymous:anonymous@ftp.bit.nl/speedtest/100mb.bin
 	@echo "  help    : Show this help message"
-
-# Phony targets (not actual files)
-.PHONY: all clean run example2 example3 help
