@@ -22,7 +22,7 @@ int create_file(struct URL url, char *content) {
     }
 
     char filepath[512];
-    snprintf(filepath, sizeof(filepath), "%s", filename);
+    snprintf(filepath, sizeof(filepath), "download/%s", filename);
     
     FILE *file = fopen(filepath, "w");
     if (file == NULL) {
