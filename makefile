@@ -31,6 +31,10 @@ clean:
 		rm -rf $(DOWNLOAD_DIR)/*; \
 	fi
 
+run: $(TARGET)
+	@echo "Running with: $(filter-out $@,$(MAKECMDGOALS))"
+	@./$(TARGET) "$(filter-out $@,$(MAKECMDGOALS))"
+
 example1: $(TARGET)
 	@./$(TARGET) "ftp://ftp.up.pt/pub/archlinux/archive/iso/arch-0.8-base-i686.iso"
 
@@ -73,3 +77,6 @@ help:
 	@echo "  example2 : Compile and run the program with an example: ftp://demo:password@test.rebex.net/readme.txt"
 	@echo "  example3 : Compile and run the program with an example: ftp://anonymous:anonymous@ftp.bit.nl/speedtest/100mb.bin
 	@echo "  help    : Show this help message"
+
+%:
+	@:
