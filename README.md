@@ -3,7 +3,7 @@
 This repository contains the code, logs, and report for the second project of the RCOM course at FEUP.
 
 ## How to run
-To compile and run, use need to use the Makefile commands for it. Here's an example of how to use it.
+To compile and run, you need to use the Makefile commands for it. Here's an example of how to use it.
 
 ```bash
 make run ftp://demo:password@test.rebex.net/readme.txt
